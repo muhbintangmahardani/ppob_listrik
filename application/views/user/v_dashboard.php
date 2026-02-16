@@ -1,20 +1,11 @@
-<?php if($this->session->flashdata('pesan_sukses') !=''): ?>
-    <script>
-    $(document).ready(function(){
-        $("#pesan").modal('show');
-    });
-    </script>
-<?php endif; ?>
-
 <style>
     /* UI Next.js Style Custom CSS - LARGE & RESPONSIVE VERSION */
     .nj-dashboard {
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
         padding-bottom: 40px;
-        min-height: 80vh; /* Agar memenuhi minimal 80% tinggi layar */
+        min-height: 80vh; 
     }
 
-    /* Flexbox Row untuk memastikan tinggi card selalu sejajar */
     .nj-row-flex {
         display: flex;
         flex-wrap: wrap;
@@ -22,17 +13,17 @@
     .nj-row-flex > [class*='col-'] {
         display: flex;
         flex-direction: column;
-        margin-bottom: 24px; /* Jarak antar baris di mobile */
+        margin-bottom: 24px; 
     }
 
     .nj-card {
         background: #ffffff;
-        border-radius: 20px; /* Sudut lebih membulat */
+        border-radius: 20px; 
         border: 1px solid #eaeaea;
         box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.05);
         transition: all 0.3s ease;
-        padding: 32px; /* Padding dibesarkan dari 24px ke 32px */
-        flex: 1; /* Membuat card meregang memenuhi sisa ruang tinggi */
+        padding: 32px; 
+        flex: 1; 
         position: relative;
         overflow: hidden;
     }
@@ -42,12 +33,11 @@
         border-color: #0070f3;
     }
     
-    /* Card Khusus Header/Welcome (Lebih Besar) */
     .nj-card-hero {
         background: linear-gradient(135deg, #0070f3 0%, #3b82f6 100%);
         color: white;
         border: none;
-        padding: 48px 36px; /* Super besar untuk menyambut user */
+        padding: 48px 36px; 
         box-shadow: 0 12px 35px 0 rgba(0, 112, 243, 0.3);
     }
     .nj-card-hero:hover {
@@ -66,14 +56,14 @@
     .nj-subtitle { font-size: 1rem; color: #666; margin: 0; }
     
     .nj-metric { display: flex; align-items: center; }
-    .nj-metric-col { display: flex; flex-direction: column; align-items: flex-start; } /* Untuk grid rincian */
+    .nj-metric-col { display: flex; flex-direction: column; align-items: flex-start; }
     
     .nj-icon {
-        width: 72px; /* Diperbesar */
-        height: 72px; /* Diperbesar */
+        width: 72px; 
+        height: 72px; 
         border-radius: 18px;
         display: flex; align-items: center; justify-content: center;
-        font-size: 32px; /* Ikon diperbesar */
+        font-size: 32px; 
         margin-right: 20px;
         flex-shrink: 0;
         transition: transform 0.3s ease;
@@ -89,7 +79,6 @@
     .nj-number { font-size: 1.85rem; font-weight: 800; color: #111; line-height: 1.2; letter-spacing: -0.5px; }
     .nj-label { font-size: 1rem; color: #64748b; font-weight: 600; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
     
-    /* Box Khusus Tagihan */
     .nj-bill-box {
         background: #f8fafc;
         padding: 24px;
@@ -99,6 +88,35 @@
         display: flex;
         align-items: center;
     }
+
+    /* --- TOAST ALERT KANAN ATAS --- */
+    .nj-toast {
+        position: fixed;
+        top: 80px; /* Jarak dari atas */
+        right: -400px; /* Tersembunyi di luar layar kanan */
+        background: #ffffff;
+        border-left: 6px solid #22c55e;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        border-radius: 10px;
+        padding: 16px 20px;
+        display: flex;
+        align-items: center;
+        z-index: 9999;
+        width: 320px;
+        transition: right 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Efek memantul halus */
+    }
+    .nj-toast.show {
+        right: 24px; /* Muncul ke dalam layar */
+    }
+    .nj-toast-icon { font-size: 28px; color: #22c55e; margin-right: 16px; }
+    .nj-toast-content { flex: 1; }
+    .nj-toast-title { font-weight: 700; color: #111; margin: 0 0 4px 0; font-size: 15px; }
+    .nj-toast-msg { color: #64748b; margin: 0; font-size: 13px; line-height: 1.4; }
+    .nj-toast-close {
+        background: none; border: none; font-size: 20px; color: #94a3b8; 
+        cursor: pointer; padding: 0 0 0 10px; outline: none; transition: color 0.2s;
+    }
+    .nj-toast-close:hover { color: #111; }
 
     /* Animation Fade In Up */
     @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
@@ -118,6 +136,7 @@
         .nj-icon { width: 56px; height: 56px; font-size: 24px; }
         .nj-bill-box { flex-direction: column; align-items: flex-start; text-align: left; }
         .nj-bill-box .nj-icon { margin-bottom: 16px; margin-right: 0; }
+        .nj-toast { width: calc(100% - 48px); right: -100%; } /* Toast responsif di HP */
     }
 </style>
 
@@ -267,18 +286,38 @@
 
 </div>
 
-<div class="modal fade" id="pesan" tabindex="-1" role="dialog" aria-hidden="true">
-   <div class="modal-dialog modal-sm" style="margin-top: 100px;">
-     <div class="modal-content" style="border-radius: 20px; border: none; box-shadow: 0 15px 40px rgba(0,0,0,0.15);">
-         <div class="modal-body text-center" style="padding: 40px;">
-             <button type="button" class="close" data-dismiss="modal" style="position: absolute; right: 24px; top: 20px; font-size: 28px;">&times;</button>
-             <div style="font-size: 56px; color: #22c55e; margin-bottom: 20px; animation: fadeInUp 0.5s ease;">
-                 <i class="fa fa-check-circle"></i>
-             </div>
-             <h4 style="color: #111; font-weight: 700; margin: 0; font-size: 1.5rem;">
-                 <?= $this->session->flashdata('pesan_sukses'); ?>
-             </h4>
-         </div>
-     </div>
-   </div>
-</div>
+<?php if($this->session->flashdata('pesan_sukses') !=''): ?>
+    <div id="toastSuccess" class="nj-toast">
+        <div class="nj-toast-icon">
+            <i class="fa fa-check-circle"></i>
+        </div>
+        <div class="nj-toast-content">
+            <h4 class="nj-toast-title">Sukses!</h4>
+            <p class="nj-toast-msg"><?= $this->session->flashdata('pesan_sukses'); ?></p>
+        </div>
+        <button class="nj-toast-close" onclick="closeToast()">&times;</button>
+    </div>
+
+    <script>
+        // Memunculkan toast dengan animasi geser dari kanan
+        setTimeout(function() {
+            var toast = document.getElementById('toastSuccess');
+            if(toast) {
+                toast.classList.add('show');
+                
+                // Menghilangkan toast otomatis setelah 5 detik
+                setTimeout(function() {
+                    toast.classList.remove('show');
+                }, 5000);
+            }
+        }, 300); // delay sebentar setelah halaman dimuat
+
+        // Fungsi jika user menekan tombol X (close)
+        function closeToast() {
+            var toast = document.getElementById('toastSuccess');
+            if(toast) {
+                toast.classList.remove('show');
+            }
+        }
+    </script>
+<?php endif; ?>
