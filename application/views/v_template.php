@@ -138,7 +138,6 @@
                             <li><a href="<?=base_url()?>data_pelanggan"><i class="fa fa-users"></i> <span>Data Pelanggan</span></a></li>
                             <li><a href="<?=base_url()?>tarif"><i class="fa fa-bolt"></i> <span>Tarif Listrik</span></a></li>
                             <li><a href="<?=base_url()?>penggunaan"><i class="fa fa-line-chart"></i> <span>Penggunaan Listrik</span></a></li>
-                            <li><a href="<?=base_url()?>pembayaran"><i class="fa fa-credit-card"></i> <span>Konfirmasi Bayar</span></a></li>
                             <li><a href="<?=base_url()?>riwayat"><i class="fa fa-history"></i> <span>Riwayat Transaksi</span></a></li>
                             <li><a href="<?=base_url()?>laporan_pembayaran"><i class="fa fa-file-pdf-o"></i> <span>Generate Laporan</span></a></li>
 

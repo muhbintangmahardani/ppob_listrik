@@ -1,5 +1,5 @@
 <style>
-    /* --- NEXT.JS STYLE BASE --- */
+    /* --- NEXT.JS STYLE BASE (SAMA DENGAN SEBELUMNYA) --- */
     .page-title { font-weight: 700; color: #111827; margin-bottom: 24px; font-size: 24px; letter-spacing: -0.5px; }
     
     .nj-card {
@@ -32,6 +32,7 @@
     .nj-badge-warning { background: #fffbeb; color: #d97706; border: 1px solid #fde68a; }
     .nj-badge-success { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
     .nj-badge-danger { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+    .nj-badge-info { background: #eff6ff; color: #3b82f6; border: 1px solid #dbeafe; }
 
     /* --- TABLE STYLING --- */
     .table-modern { width: 100% !important; border-collapse: separate !important; border-spacing: 0 !important; }
@@ -52,11 +53,8 @@
         transform: scale(4); z-index: 9999 !important; box-shadow: 0 10px 30px rgba(0,0,0,0.2);
     }
 
-    /* --- MODAL & FORM STYLING --- */
+    /* --- MODAL STYLING --- */
     .modal-content { border-radius: 16px; border: none; box-shadow: 0 20px 40px rgba(0,0,0,0.1); overflow: visible; }
-    .close { font-size: 24px; color: #64748b; opacity: 1; transition: color 0.2s; }
-    .close:hover { color: #0f172a; }
-    
     .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
     .detail-item { display: flex; flex-direction: column; gap: 6px; }
     .detail-item.full-width { grid-column: 1 / -1; }
@@ -98,7 +96,7 @@
                             <th>Bulan Bayar</th>
                             <th>Grand Total</th>
                             <th class="text-center">Status</th>
-                            <th>Pemverifikasi</th>
+                            <th class="text-center">Metode</th>
                             <th class="text-center" width="10%">Aksi</th>
                         </tr>
                     </thead>
@@ -106,7 +104,9 @@
                         <?php $no=1; foreach ($DataRiwayat as $data) {  ?>
                         <tr>
                             <td class="text-center"><?= $no++ ?></td>
-                            <td style="color: #64748b;"><?= $data->tanggal_pembayaran ?></td>
+                            <td style="color: #64748b;">
+                                <?= date('d/m/Y', strtotime($data->tanggal_pembayaran)) ?>
+                            </td>
                             <td style="font-weight: 600; color: #111827;"><?= $data->nama_pelanggan ?></td>
                             <td>
                                 <span style="font-family: monospace; background:#f1f5f9; padding:4px 8px; border-radius:6px; font-size:13px; color:#475569;">
@@ -117,18 +117,25 @@
                             <td style="font-weight: 600; color: #059669;">
                                 Rp <?= number_format($data->total_bayar, 2, ',', '.') ?>
                             </td>
+                            
                             <td class="text-center">
-                                <?php if($data->status == "Belum Dikonfirmasi"): ?>
-                                    <span class="nj-badge nj-badge-warning"><?= $data->status ?></span>
-                                <?php elseif($data->status == "Lunas"): ?>
-                                    <span class="nj-badge nj-badge-success"><i class="fa fa-check" style="margin-right:4px;"></i> <?= $data->status ?></span>
+                                <?php if($data->status == "Lunas"): ?>
+                                    <span class="nj-badge nj-badge-success">Lunas</span>
+                                <?php elseif($data->status == "Ditolak"): ?>
+                                    <span class="nj-badge nj-badge-danger">Ditolak</span>
                                 <?php else: ?>
-                                    <span class="nj-badge nj-badge-danger"><?= $data->status ?></span>
+                                    <span class="nj-badge nj-badge-warning">Pending</span>
                                 <?php endif ?>
                             </td>
-                            <td style="color: #475569; font-size: 13px;">
-                                <i class="fa fa-user" style="margin-right:4px; opacity:0.5;"></i> <?= $data->nama_admin ?>
+
+                            <td class="text-center">
+                                <?php if($data->bukti == 'MIDTRANS-OTOMATIS'): ?>
+                                    <span class="nj-badge nj-badge-info"><i class="fa fa-bolt"></i> Midtrans</span>
+                                <?php else: ?>
+                                    <span class="nj-badge" style="background:#f1f5f9; color:#64748b;"><i class="fa fa-file-image-o"></i> Manual</span>
+                                <?php endif; ?>
                             </td>
+
                             <td class="text-center">
                                 <a onclick="edit('<?=$data->id_pembayaran ?>')" class="nj-btn nj-btn-primary nj-btn-sm" data-toggle="modal" data-target="#detail" href="#">
                                     <i class="fa fa-eye"></i> Detail
@@ -168,13 +175,26 @@
                     </div>
 
                     <div class="detail-item full-width" style="margin-bottom: 8px;">
-                        <label class="detail-label">Bukti Bayar</label>
-                        <div style="padding: 12px; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px; display: inline-block;">
-                            <img src="" name="image" class="img-zoom" id="bukti" alt="Bukti Pembayaran">
+                        <label class="detail-label">Bukti Transaksi</label>
+                        
+                        <div id="container-bukti-manual" style="display:none;">
+                            <div style="padding: 12px; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px; display: inline-block;">
+                                <img src="" name="image" class="img-zoom" id="bukti" alt="Bukti Pembayaran">
+                            </div>
+                            <small style="color: #94a3b8; font-size: 12px; margin-top: 4px; display:block;">
+                                <i class="fa fa-info-circle"></i> Arahkan kursor ke gambar untuk memperbesar
+                            </small>
                         </div>
-                        <small style="color: #94a3b8; font-size: 12px; margin-top: 4px;"><i class="fa fa-info-circle"></i> Arahkan kursor ke gambar untuk memperbesar</small>
-                    </div>
 
+                        <div id="container-bukti-midtrans" style="display:none;">
+                            <div style="padding: 20px; background: #eff6ff; border: 1px solid #dbeafe; border-radius: 12px; text-align: center; color: #1e40af;">
+                                <i class="fa fa-check-circle" style="font-size: 32px; margin-bottom: 8px; color: #3b82f6;"></i>
+                                <h5 style="margin:0; font-weight:700;">Pembayaran Otomatis</h5>
+                                <p style="margin:4px 0 0 0; font-size:13px;">Terverifikasi oleh Payment Gateway (Midtrans)</p>
+                            </div>
+                        </div>
+
+                    </div>
                     <div class="detail-item">
                         <label class="detail-label">Nama Pelanggan</label>
                         <input type="text" id="nama_pelanggan" disabled class="nj-input">
@@ -255,25 +275,46 @@
             url: "<?=base_url()?>riwayat/detail_riwayat/" + a,
             dataType: "json",
             success: function (data) {
-                $("#bukti").attr('src','<?php echo base_url()?>assets/bukti/'+data.bukti);
+                // LOGIKA TAMPILAN BUKTI (Midtrans vs Manual)
+                if(data.bukti === 'MIDTRANS-OTOMATIS') {
+                    // Sembunyikan container gambar, munculkan info midtrans
+                    $('#container-bukti-manual').hide();
+                    $('#container-bukti-midtrans').show();
+                    // Admin pemverifikasi biasanya sistem jika midtrans
+                    if(!data.nama_admin) {
+                        $("#nama_admin").val("Otomatis By System");
+                    } else {
+                        $("#nama_admin").val(data.nama_admin);
+                    }
+                } else {
+                    // Munculkan container gambar, sembunyikan info midtrans
+                    $('#container-bukti-midtrans').hide();
+                    $('#container-bukti-manual').show();
+                    $("#bukti").attr('src','<?php echo base_url()?>assets/bukti/'+data.bukti);
+                    $("#nama_admin").val(data.nama_admin);
+                }
+
+                // Isi data field lainnya
                 $("#tanggal_pembayaran").val(data.tanggal_pembayaran);
                 $("#nama_pelanggan").val(data.nama_pelanggan);
                 $("#nomor_kwh").val(data.nomor_kwh);
-                $("#nama_admin").val(data.nama_admin);
+                
                 $("#meter_awal").val(data.meter_awal);
                 $("#meter_akhir").val(data.meter_akhir);
                 $("#jumlah_meter").val(data.jumlah_meter);
                 $("#bulan_bayar").val(data.bulan_bayar);
-                $("#id_level1").val(data.id_level);
                 $("#status").val(data.status);
                 
-                // Format angka total bayar agar lebih rapi saat ditampilkan
+                // Format angka total bayar
                 let total = parseInt(data.total_bayar);
                 if(!isNaN(total)) {
                     $("#total_bayar").val(total.toLocaleString('id-ID'));
                 } else {
                     $("#total_bayar").val(data.total_bayar);
                 }
+            },
+            error: function (xhr, ajaxOptions, thrownError) {
+                alert('Gagal mengambil data detail');
             }
         });
     }

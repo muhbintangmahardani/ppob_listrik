@@ -15,14 +15,20 @@ class M_riwayat extends CI_Model {
            pembayaran.id_pembayaran,
            pembayaran.status,
            pembayaran.bukti,
-           admin.nama_admin');
+           admin.nama_admin'); // Jika Midtrans, ini nanti akan NULL (Kosong)
        $this->db->from('pembayaran');
        $this->db->where('pembayaran.status !=', '');
        $this->db->order_by('id_pembayaran', 'desc');
-       $this->db->join('admin','admin.id_admin=pembayaran.id_admin');
+       
+       // --- PERBAIKAN DISINI ---
+       // Tambahkan parameter 'left' agar data pembayaran tetap muncul meski tidak ada adminnya
+       $this->db->join('admin','admin.id_admin=pembayaran.id_admin', 'left'); 
+       
+       // Join ke tabel data pelanggan tetap inner/biasa tidak masalah
        $this->db->join('tagihan','tagihan.id_tagihan=pembayaran.id_tagihan');
        $this->db->join('penggunaan','penggunaan.id_penggunaan=tagihan.id_penggunaan');
        $this->db->join('pelanggan','pelanggan.id_pelanggan=penggunaan.id_pelanggan');
+       
        return $this->db->get()->result();
    }
 
@@ -46,7 +52,10 @@ class M_riwayat extends CI_Model {
                  admin.nama_admin')
              ->where('pembayaran.id_pembayaran', $id)
              ->order_by('id_pembayaran', 'desc')
-             ->join('admin','admin.id_admin=pembayaran.id_admin')
+             
+             // --- PERBAIKAN DISINI JUGA ---
+             ->join('admin','admin.id_admin=pembayaran.id_admin', 'left')
+             
              ->join('tagihan','tagihan.id_tagihan=pembayaran.id_tagihan')
              ->join('penggunaan','penggunaan.id_penggunaan=tagihan.id_penggunaan')
              ->join('pelanggan','pelanggan.id_pelanggan=penggunaan.id_pelanggan')
