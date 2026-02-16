@@ -1,11 +1,3 @@
-<?php if($this->session->flashdata('pesan_sukses') !=''): ?>
-    <script>
-    $(document).ready(function(){
-        $("#pesan").modal('show');
-    });
-    </script>
-<?php endif; ?>
-
 <style>
     /* UI Next.js Style Custom CSS - LARGE & RESPONSIVE VERSION */
     .nj-dashboard {
@@ -44,7 +36,7 @@
     
     /* Card Khusus Header/Welcome (Lebih Besar) */
     .nj-card-hero {
-        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); /* Warna gelap elegan khusus Admin */
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
         color: white;
         border: none;
         padding: 48px 36px;
@@ -110,6 +102,75 @@
     .delay-4 { animation-delay: 0.4s; }
     .delay-5 { animation-delay: 0.5s; }
 
+    /* --- TOAST NOTIFICATION NEXT.JS STYLE (POJOK KANAN ATAS) --- */
+    .nj-toast-container {
+        position: fixed;
+        top: 85px; /* Diberi jarak agar tidak menabrak navbar */
+        right: 32px;
+        z-index: 9999;
+        pointer-events: none;
+    }
+    .nj-toast {
+        background: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        box-shadow: 0 10px 40px -10px rgba(0,0,0,0.15);
+        border-radius: 14px;
+        padding: 16px 24px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        transform: translateX(120%);
+        opacity: 0;
+        transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        pointer-events: auto;
+        min-width: 300px;
+    }
+    .nj-toast.show {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    .nj-toast-icon {
+        background: #dcfce7;
+        color: #22c55e;
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        flex-shrink: 0;
+    }
+    .nj-toast-text {
+        display: flex;
+        flex-direction: column;
+    }
+    .nj-toast-title {
+        font-weight: 700;
+        color: #111;
+        font-size: 15px;
+        margin-bottom: 2px;
+    }
+    .nj-toast-desc {
+        color: #64748b;
+        font-size: 13px;
+        font-weight: 500;
+    }
+    .nj-toast-close {
+        background: transparent;
+        border: none;
+        color: #94a3b8;
+        font-size: 20px;
+        cursor: pointer;
+        margin-left: auto;
+        transition: color 0.2s;
+        padding: 0;
+        line-height: 1;
+    }
+    .nj-toast-close:hover { color: #111; }
+
     /* Responsif Tambahan untuk Mobile */
     @media (max-width: 768px) {
         .nj-card { padding: 24px; }
@@ -119,6 +180,13 @@
         .nj-icon { width: 56px; height: 56px; font-size: 24px; }
         .nj-highlight-box { flex-direction: column; align-items: flex-start; text-align: left; }
         .nj-highlight-box .nj-icon { margin-bottom: 16px; margin-right: 0; }
+        
+        .nj-toast-container {
+            top: 85px;
+            right: 20px;
+            left: 20px;
+        }
+        .nj-toast { min-width: unset; width: 100%; }
     }
 </style>
 
@@ -127,7 +195,7 @@
     <div class="row nj-row-flex">
         <div class="col-xs-12 animate-fade-in delay-1">
             <div class="nj-card nj-card-hero">
-                <h3 class="nj-title">Halo, Admin <?= htmlspecialchars($this->session->userdata('nama_admin')) ?> 🛡️</h3>
+                <h3 class="nj-title">Halo, <?= htmlspecialchars($this->session->userdata('nama_admin')) ?> 🛡️</h3>
                 <p class="nj-subtitle">Selamat bertugas! Berikut adalah ringkasan lalu lintas pembayaran PPOB Listrik Pasca Prabayar saat ini.</p>
             </div>
         </div>
@@ -219,18 +287,42 @@
 
 </div>
 
-<div class="modal fade" id="pesan" tabindex="-1" role="dialog" aria-hidden="true">
-   <div class="modal-dialog modal-sm" style="margin-top: 100px;">
-     <div class="modal-content" style="border-radius: 20px; border: none; box-shadow: 0 15px 40px rgba(0,0,0,0.15);">
-         <div class="modal-body text-center" style="padding: 40px;">
-             <button type="button" class="close" data-dismiss="modal" style="position: absolute; right: 24px; top: 20px; font-size: 28px;">&times;</button>
-             <div style="font-size: 56px; color: #22c55e; margin-bottom: 20px; animation: fadeInUp 0.5s ease;">
-                 <i class="fa fa-check-circle"></i>
-             </div>
-             <h4 style="color: #111; font-weight: 700; margin: 0; font-size: 1.5rem;">
-                 <?= $this->session->flashdata('pesan_sukses'); ?>
-             </h4>
-         </div>
-     </div>
-   </div>
+<?php if($this->session->flashdata('pesan_sukses') != ''): ?>
+<div class="nj-toast-container">
+    <div id="njToast" class="nj-toast">
+        <div class="nj-toast-icon"><i class="fa fa-check"></i></div>
+        <div class="nj-toast-text">
+            <span class="nj-toast-title">Berhasil!</span>
+            <span class="nj-toast-desc"><?= $this->session->flashdata('pesan_sukses'); ?></span>
+        </div>
+        <button class="nj-toast-close" onclick="closeToast()">&times;</button>
+    </div>
 </div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const toast = document.getElementById('njToast');
+        
+        // Munculkan toast setelah sedikit delay biar animasinya mulus
+        setTimeout(() => {
+            toast.classList.add('show');
+        }, 100);
+
+        // Otomatis hilang setelah 4.5 detik
+        setTimeout(() => {
+            closeToast();
+        }, 4500);
+    });
+
+    function closeToast() {
+        const toast = document.getElementById('njToast');
+        if(toast) {
+            toast.classList.remove('show');
+            // Hapus dari DOM setelah animasi selesai
+            setTimeout(() => {
+                toast.style.display = 'none';
+            }, 500);
+        }
+    }
+</script>
+<?php endif; ?>
