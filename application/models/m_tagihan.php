@@ -72,6 +72,9 @@ class M_tagihan extends CI_Model {
     // --- FUNGSI LAMA (MANUAL UPLOAD) ---
     public function update_bayar()
     {
+        // Atur timezone agar akurat
+        date_default_timezone_set('Asia/Jakarta');
+
         $cek_bayar=$this->db
             ->where('id_tagihan',$this->input->post('id_tagihan'))
             ->get('pembayaran');
@@ -86,7 +89,8 @@ class M_tagihan extends CI_Model {
             $dt_bayar=$cek_bayar->row();
             $data=array(
                 'bukti'=>$this->upload->data('file_name'),
-                'status'=>'Belum Dikonfirmasi'
+                'status'=>'Belum Dikonfirmasi',
+                'tanggal_pembayaran'=>date('Y-m-d H:i:s') // PERBAIKAN: Update waktu saat upload ulang
             );
             $this->db->where('id_pembayaran',$dt_bayar->id_pembayaran)
                      ->update('pembayaran',$data);
@@ -103,7 +107,7 @@ class M_tagihan extends CI_Model {
             $biaya_admin = 2500;
             $data=array(
                 'id_tagihan'=>$this->input->post('id_tagihan'),
-                'tanggal_pembayaran'=>date('Y-m-d'),
+                'tanggal_pembayaran'=>date('Y-m-d H:i:s'), // PERBAIKAN: Tambah H:i:s
                 'bulan_bayar'=>$dt_tagihan->bulan.' '.$dt_tagihan->tahun,
                 'biaya_admin'=> $biaya_admin,
                 'total_bayar'=>( $biaya_admin +($dt_tagihan->jumlah_meter*$tarif_perkwh->terperkwh)),
@@ -141,6 +145,9 @@ class M_tagihan extends CI_Model {
     // 2. Proses update database setelah pembayaran Midtrans sukses
     public function bayar_via_midtrans($id_tagihan)
     {
+        // Atur timezone agar akurat
+        date_default_timezone_set('Asia/Jakarta');
+
         // Ambil data tagihan & tarif untuk mengisi tabel pembayaran
         $info = $this->get_detail_tagihan($id_tagihan);
         $biaya_admin = 2500; 
@@ -154,7 +161,7 @@ class M_tagihan extends CI_Model {
             // Kolom 'bukti' kita isi string 'MIDTRANS-OTOMATIS' karena tidak ada file upload
             $data_pembayaran = array(
                 'id_tagihan'        => $id_tagihan,
-                'tanggal_pembayaran'=> date('Y-m-d'),
+                'tanggal_pembayaran'=> date('Y-m-d H:i:s'), // PERBAIKAN: Tambah H:i:s
                 'bulan_bayar'       => $info->bulan . ' ' . $info->tahun,
                 'biaya_admin'       => $biaya_admin,
                 'total_bayar'       => $total_bayar,
@@ -163,9 +170,13 @@ class M_tagihan extends CI_Model {
             );
             $this->db->insert('pembayaran', $data_pembayaran);
         } else {
-             // Jika entah kenapa data sudah ada tapi belum lunas, update saja
+             // Jika entah kenapa data sudah ada tapi belum lunas, update saja (dan catat waktu lunasnya)
              $this->db->where('id_tagihan', $id_tagihan)
-                      ->update('pembayaran', ['status' => 'Lunas', 'bukti' => 'MIDTRANS-OTOMATIS']);
+                      ->update('pembayaran', [
+                          'status' => 'Lunas', 
+                          'bukti' => 'MIDTRANS-OTOMATIS',
+                          'tanggal_pembayaran' => date('Y-m-d H:i:s') // PERBAIKAN: Update waktu lunas
+                      ]);
         }
 
         // UPDATE status di tabel tagihan

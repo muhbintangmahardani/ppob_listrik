@@ -15,6 +15,10 @@ class M_user extends CI_Model {
     public function getDataTarif(){
       $this->db->select('*');
       $this->db->from('tarif');
+      
+      // PERBAIKAN: Hanya ambil tarif yang statusnya Aktif
+      $this->db->where('status', 'Aktif'); 
+      
       return $this->db->get()->result();
     }
 
@@ -42,5 +46,3 @@ class M_user extends CI_Model {
   }
 
 }
-
-?>

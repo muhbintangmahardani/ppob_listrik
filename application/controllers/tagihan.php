@@ -33,7 +33,7 @@ class Tagihan extends CI_Controller {
         require_once APPPATH . 'third_party/midtrans/Midtrans.php';
         
         // GANTI ServerKey DENGAN KEY ANDA
-        \Midtrans\Config::$serverKey = 'ISI_SERVER_KEY_ANDA_DISINI'; 
+        \Midtrans\Config::$serverKey = 'Mid-server-6ZfrsLJynO8fdWw3OHbWAJBI'; 
         \Midtrans\Config::$isProduction = false;
         \Midtrans\Config::$isSanitized = true;
         \Midtrans\Config::$is3ds = true;

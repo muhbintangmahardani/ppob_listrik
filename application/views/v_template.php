@@ -19,6 +19,8 @@
     <link rel="apple-touch-icon" sizes="76x76" href="<?=base_url()?>assets/img/pln1.png">
     <link rel="icon" type="image/png" sizes="96x96" href="<?=base_url()?>assets/img/pln1.png">
 
+    <script src="<?=base_url()?>assets/vendor/jquery/jquery.min.js"></script>
+
     <style>
         /* Global Background */
         body, #wrapper, .main { background-color: #fafafa !important; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
@@ -52,10 +54,10 @@
 
         /* --- LAYOUT FIX --- */
         body #wrapper .sidebar { background-color: #ffffff !important; border-right: 1px solid #eaeaea !important; box-shadow: none !important; top: 70px !important; width: 260px !important; position: fixed; height: calc(100vh - 70px); z-index: 10; left: 0; padding-top: 0 !important; margin-top: 0 !important; }
-        body #wrapper .main { padding-top: 70px !important; background-color: #fafafa !important; margin-left: 260px !important; min-height: 100vh; }
+        body #wrapper .main { padding-top: 70px !important; background-color: #fafafa !important; margin-left: 260px !important; min-height: 100vh; display: flex; flex-direction: column; }
         body #wrapper .sidebar .sidebar-scroll { padding: 0 !important; margin: 0 !important; }
         body #wrapper .sidebar .nav { padding: 0 !important; margin: 0 !important; padding-top: 20px !important; }
-        body #wrapper .main-content { padding: 0 !important; margin: 0 !important; }
+        body #wrapper .main-content { padding: 0 !important; margin: 0 !important; flex: 1; }
         body #wrapper .main-content .container-fluid { padding: 0 !important; margin: 0 !important; padding-top: 20px !important; padding-left: 30px !important; padding-right: 30px !important; }
         body #wrapper .main-content .container-fluid > div:first-child, body #wrapper .main-content .container-fluid > .row:first-child, body #wrapper .main-content .container-fluid > .panel:first-child { margin-top: 0 !important; padding-top: 0 !important; }
 
@@ -104,7 +106,18 @@
                     <ul class="nav navbar-nav">
                         <li class="dropdown">
                             <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-                                <img src="<?=base_url()?>assets/img/user.png" class="img-circle" alt="Avatar">
+                                
+                                <?php 
+                                    // Cek apakah ada session foto profil dan filenya ada
+                                    $foto = $this->session->userdata('foto_profil');
+                                    if($foto && file_exists('./assets/img/profil/'.$foto)) {
+                                        $img_src = base_url('assets/img/profil/'.$foto);
+                                    } else {
+                                        $img_src = base_url('assets/img/user.png'); // Default
+                                    }
+                                ?>
+                                <img src="<?= $img_src ?>?v=<?= time() ?>" class="img-circle" alt="Avatar">
+                                
                                 <span>
                                     <?php if($this->session->userdata('id_level')!= null): ?>
                                         <?= $this->session->userdata('nama_admin') ?>
@@ -118,6 +131,7 @@
                                 <?php if($this->session->userdata('id_level')!=NULL): ?>
                                     <li><a href="<?=base_url()?>admin/logout"><i class="lnr lnr-exit" style="margin-right: 10px;"></i> <span>Keluar Sistem</span></a></li>
                                 <?php else: ?>
+                                    <li><a href="<?=base_url()?>profil"><i class="lnr lnr-user" style="margin-right: 10px;"></i> <span>Profil Saya</span></a></li>
                                     <li><a href="<?=base_url()?>user/logout"><i class="lnr lnr-exit" style="margin-right: 10px;"></i> <span>Keluar Sistem</span></a></li>
                                 <?php endif ?>
                             </ul>
@@ -147,6 +161,7 @@
 
                         <?php else: ?>
                             <li><a href="<?=base_url()?>dashboard" class="active"><i class="lnr lnr-home"></i> <span>Dashboard</span></a></li>
+                            <li><a href="<?=base_url()?>profil"><i class="fa fa-user-circle"></i> <span>Profil Saya</span></a></li>
                             <li><a href="<?=base_url()?>tagihan"><i class="fa fa-file-text-o"></i> <span>Tagihan Listrik</span></a></li>
                             <li><a href="<?=base_url()?>laporan_tagihan"><i class="fa fa-print"></i> <span>Cetak Riwayat</span></a></li>
                         <?php endif ?>
@@ -161,11 +176,17 @@
                     <?php $this->load->view($konten); ?>
                 </div>
             </div>
+            
+            <footer style="padding: 24px 30px; margin-top: auto; border-top: 1px solid #eaeaea; background-color: transparent; text-align: left;">
+                <p style="margin: 0; color: #64748b; font-size: 13px; font-weight: 500;">
+                    &copy; 2026 Muh Bintang Mahardani. All rights reserved.
+                </p>
+            </footer>
+
         </div>
         <div class="clearfix"></div>
     </div>
     
-    <script src="<?=base_url()?>assets/vendor/jquery/jquery.min.js"></script>
     <script src="<?=base_url()?>assets/vendor/bootstrap/js/bootstrap.min.js"></script>
     <script src="<?=base_url()?>assets/vendor/jquery-slimscroll/jquery.slimscroll.min.js"></script>
 

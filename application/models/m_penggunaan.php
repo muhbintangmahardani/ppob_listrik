@@ -9,10 +9,11 @@ class M_penggunaan extends CI_Model {
 
     public function getDataPelanggan()
     {
-        return $this->db
-            ->join('tarif','tarif.id_tarif = pelanggan.id_tarif')
-            ->get('pelanggan')
-            ->result();
+        // Menggunakan 'terperkwh' sesuai struktur database Anda
+        $this->db->select('pelanggan.*, tarif.daya, tarif.terperkwh'); 
+        $this->db->from('pelanggan');
+        $this->db->join('tarif','tarif.id_tarif = pelanggan.id_tarif');
+        return $this->db->get()->result();
     }
 
     public function getDataTarif()
@@ -43,32 +44,35 @@ class M_penggunaan extends CI_Model {
         $meter_awal  = (int)$this->input->post('meter_awal');
         $meter_akhir = (int)$this->input->post('meter_akhir');
 
-        // VALIDASI
+        // VALIDASI METER
         if ($meter_akhir < $meter_awal) {
             return false;
         }
 
         $jumlah_meter = $meter_akhir - $meter_awal;
 
-        // INSERT PENGGUNAAN
-        $this->db->insert('penggunaan', [
+        // 1. INSERT PENGGUNAAN
+        $data_penggunaan = [
             'id_pelanggan' => $this->input->post('id_pelanggan'),
             'bulan'        => $this->input->post('bulan'),
             'tahun'        => $this->input->post('tahun'),
             'meter_awal'   => $meter_awal,
             'meter_akhir'  => $meter_akhir
-        ]);
+        ];
+        $this->db->insert('penggunaan', $data_penggunaan);
 
+        // Ambil ID Penggunaan yang baru saja dibuat
         $id_penggunaan = $this->db->insert_id();
 
-        // INSERT TAGIHAN (TANPA id_pelanggan)
-        $this->db->insert('tagihan', [
+        // 2. INSERT TAGIHAN (PERBAIKAN: id_pelanggan dihapus agar tidak Error 1054)
+        $data_tagihan = [
             'id_penggunaan' => $id_penggunaan,
             'bulan'         => $this->input->post('bulan'),
             'tahun'         => $this->input->post('tahun'),
             'jumlah_meter'  => $jumlah_meter,
-            'status'        => 'Belum Dibayar'
-        ]);
+            'status'        => 'Belum Bayar'
+        ];
+        $this->db->insert('tagihan', $data_tagihan);
 
         return $this->db->affected_rows() > 0;
     }
@@ -79,11 +83,15 @@ class M_penggunaan extends CI_Model {
 
     public function getDataPenggunaan($id_pelanggan)
     {
-        return $this->db
-            ->join('pelanggan','pelanggan.id_pelanggan = penggunaan.id_pelanggan')
-            ->where('penggunaan.id_pelanggan', $id_pelanggan)
-            ->get('penggunaan')
-            ->result();
+        $this->db->select('penggunaan.*, pelanggan.nama_pelanggan, pelanggan.nomor_kwh');
+        $this->db->from('penggunaan');
+        $this->db->join('pelanggan','pelanggan.id_pelanggan = penggunaan.id_pelanggan');
+        
+        if($id_pelanggan != null) {
+            $this->db->where('penggunaan.id_pelanggan', $id_pelanggan);
+        }
+        
+        return $this->db->get()->result();
     }
 
     public function data_penggunaan($id_penggunaan)
@@ -169,6 +177,23 @@ class M_penggunaan extends CI_Model {
                  ]);
 
         return true;
+    }
+
+    /* =========================
+       DATA PEMBAYARAN (SUDAH DIPERBARUI)
+    ========================== */
+
+    public function getDataPembayaran($id_pelanggan)
+    {
+        // PERBAIKAN: Menambahkan select untuk tagihan.status, pelanggan.nama_pelanggan, dan pelanggan.nomor_kwh
+        $this->db->select('pembayaran.*, tagihan.jumlah_meter, tagihan.bulan, tagihan.tahun, tagihan.status, pelanggan.nama_pelanggan, pelanggan.nomor_kwh');
+        $this->db->from('pembayaran');
+        $this->db->join('tagihan', 'tagihan.id_tagihan = pembayaran.id_tagihan');
+        $this->db->join('penggunaan', 'penggunaan.id_penggunaan = tagihan.id_penggunaan');
+        $this->db->join('pelanggan', 'pelanggan.id_pelanggan = penggunaan.id_pelanggan'); // Tambahan join ke pelanggan
+        $this->db->where('penggunaan.id_pelanggan', $id_pelanggan);
+        
+        return $this->db->get()->result();
     }
 
 }

@@ -61,8 +61,8 @@
                         if(empty($pembayaran)) {
                             echo '<tr><td colspan="8" class="text-center" style="padding: 40px; color:#94a3b8;">Belum ada data pembayaran masuk.</td></tr>';
                         }
-                        
-                        $no=1; foreach($pembayaran as $row): 
+                        else {
+                            $no=1; foreach($pembayaran as $row): 
                         ?>
                         <tr>
                             <td class="text-center"><?= $no++ ?></td>
@@ -94,9 +94,10 @@
                             </td>
 
                             <td class="text-center">
-                                <?php if($row->status_bayar == 'Lunas'): ?>
+                                <?php /* PERBAIKAN: status_bayar diubah menjadi status */ ?>
+                                <?php if($row->status == 'Lunas'): ?>
                                     <span class="nj-badge nj-badge-success">Lunas</span>
-                                <?php elseif($row->status_bayar == 'Ditolak'): ?>
+                                <?php elseif($row->status == 'Ditolak'): ?>
                                     <span class="nj-badge nj-badge-danger">Ditolak</span>
                                 <?php else: ?>
                                     <span class="nj-badge nj-badge-warning">Perlu Cek</span>
@@ -104,11 +105,12 @@
                             </td>
 
                             <td class="text-center">
-                                <?php if($row->status_bayar == 'Lunas'): ?>
+                                <?php /* PERBAIKAN: status_bayar diubah menjadi status */ ?>
+                                <?php if($row->status == 'Lunas'): ?>
                                     <button class="nj-btn nj-btn-secondary" disabled title="Transaksi Selesai">
                                         <i class="fa fa-check-circle"></i> Selesai
                                     </button>
-                                <?php elseif($row->status_bayar == 'Ditolak'): ?>
+                                <?php elseif($row->status == 'Ditolak'): ?>
                                     <button class="nj-btn nj-btn-secondary" disabled>
                                         <i class="fa fa-times-circle"></i> Ditolak
                                     </button>
@@ -124,7 +126,7 @@
                                 <?php endif; ?>
                             </td>
                         </tr>
-                        <?php endforeach; ?>
+                        <?php endforeach; } ?>
                     </tbody>
                 </table>
             </div>

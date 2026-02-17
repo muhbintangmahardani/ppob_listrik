@@ -42,15 +42,21 @@ class M_admin extends CI_Model {
         return $this->db->get()->result();
     }
 
-    // Konfirmasi Manual
+    // Konfirmasi Manual (DIPERBAIKI UNTUK REAL-TIME WAKTU)
     public function konfirmasi_pembayaran($id_pembayaran)
     {
         $bayar = $this->db->get_where('pembayaran', ['id_pembayaran' => $id_pembayaran])->row();
         
         if($bayar){
-            // Update Pembayaran
+            // Atur zona waktu ke WIB agar jamnya sesuai (opsional tapi sangat disarankan)
+            date_default_timezone_set('Asia/Jakarta'); 
+
+            // Update Pembayaran (Status Lunas & Catat Waktu Saat Diklik)
             $this->db->where('id_pembayaran', $id_pembayaran);
-            $this->db->update('pembayaran', ['status' => 'Lunas']);
+            $this->db->update('pembayaran', [
+                'status' => 'Lunas',
+                'tanggal_pembayaran' => date('Y-m-d H:i:s') // MENYIMPAN JAM, MENIT, DETIK SAAT DIKLIK LUNAS
+            ]);
 
             // Update Tagihan
             $this->db->where('id_tagihan', $bayar->id_tagihan);

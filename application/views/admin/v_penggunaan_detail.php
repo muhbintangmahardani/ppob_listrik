@@ -120,7 +120,7 @@
                                     <a class="nj-btn nj-btn-primary nj-btn-sm" style="flex: 1; padding: 8px 4px; font-size: 12px;" data-toggle="modal" data-target="#penggunaan" href="#" onclick="edit('<?=$data->id_penggunaan?>')">
                                         <i class="fa fa-pencil"></i> Edit
                                     </a>
-                                    <a class="nj-btn nj-btn-danger nj-btn-sm" style="flex: 1; padding: 8px 4px; font-size: 12px;" data-toggle="modal" data-target="#hapus" href="#" onclick="hapus('<?=$data->id_penggunaan?>')">
+                                    <a class="nj-btn nj-btn-danger nj-btn-sm" style="flex: 1; padding: 8px 4px; font-size: 12px;" data-toggle="modal" data-target="#hapus" href="#" data-idpenggunaan="<?=$data->id_penggunaan?>" onclick="setHapus(this)">
                                         <i class="fa fa-trash"></i> Hapus
                                     </a>
                                 </div>
@@ -283,15 +283,28 @@
         });
     }
 
-    function hapus(a) {
+    // PERBAIKAN: Fungsi hapus diganti menjadi setHapus
+    function setHapus(button) {
+        // Ambil ID penggunaan langsung dari tombol yang diklik
+        var id_penggunaan = $(button).data('idpenggunaan');
+        
+        // Langsung masukkan ID ke input hidden di dalam modal
+        $("#id_penggunaan1").val(id_penggunaan);
+
+        // Ambil id_tagihan melalui AJAX
         $.ajax({
             type: "post",
-            url: "<?=base_url()?>penggunaan/data_tagihan_detail/" + a,
+            url: "<?=base_url()?>penggunaan/data_tagihan_detail/" + id_penggunaan,
             dataType: "json",
             success: function (data) {
-                // Sesuai kode aslimu, ini untuk mengisi ID yang akan dihapus
-                $("#id_tagihan1").val(data.id_tagihan);
-                $("#id_penggunaan1").val(data.id_penggunaan);
+                if(data && data.id_tagihan) {
+                    $("#id_tagihan1").val(data.id_tagihan);
+                } else {
+                    console.log("Data tagihan kosong atau belum ada tagihan untuk penggunaan ini.");
+                }
+            },
+            error: function() {
+                alert("Terjadi kesalahan jaringan saat menyiapkan data hapus.");
             }
         });
     }
