@@ -5,10 +5,12 @@ class Tagihan extends CI_Controller {
 
     public function __construct() {
         parent::__construct();
+        // Cek login user
         if ($this->session->userdata('login') != TRUE) {
             $this->session->set_flashdata('pesan_gagal','Anda Harus Login Dahulu');
             redirect('user/login','refresh');
         }
+        // Jika yang login ternyata admin, lempar ke dashboard admin
         elseif ($this->session->userdata('id_level') == TRUE) {
             redirect('dashboard_admin','refresh');
         }
@@ -25,7 +27,7 @@ class Tagihan extends CI_Controller {
     }
 
     // ==============================================================
-    // TOKEN MIDTRANS (Hitung Harga Otomatis)
+    // 1. TOKEN MIDTRANS (Hitung Harga & Insert Data "Pending")
     // ==============================================================
     public function token_midtrans()
     {
@@ -33,27 +35,55 @@ class Tagihan extends CI_Controller {
         require_once APPPATH . 'third_party/midtrans/Midtrans.php';
         
         // GANTI ServerKey DENGAN KEY ANDA
-        \Midtrans\Config::$serverKey = 'MIdsk-XXXXXXXXXXXXXXXX'; 
+        \Midtrans\Config::$serverKey = 'ISI_DENGAN_SERVER_KEY_MIDTRANS'; 
         \Midtrans\Config::$isProduction = false;
         \Midtrans\Config::$isSanitized = true;
         \Midtrans\Config::$is3ds = true;
 
         $id_tagihan = $this->input->post('id_tagihan');
 
-        // 1. Ambil Data Tagihan & Tarif dari Model
+        // Ambil Data Tagihan & Tarif dari Model
         $detail = $this->tagihan->get_detail_tagihan($id_tagihan);
 
         if($detail) {
-            // 2. Hitung Total Bayar (Rumus samakan dengan model update_bayar)
+            // Hitung Total Bayar
             $biaya_admin = 2500;
             $total_bayar = ($detail->jumlah_meter * $detail->terperkwh) + $biaya_admin;
 
-            // Rules Midtrans: Minimal Rp 1.000 (jika hasil hitung 0/minus, set 1000 buat testing)
+            // Rules Midtrans: Minimal Rp 1.000
             if($total_bayar < 1000) $total_bayar = 1000;
 
+            // ====================================================================
+            // CEK & HAPUS DATA PENDING LAMA (Mencegah Error "Order ID already taken")
+            // ====================================================================
+            $this->db->where('id_tagihan', $id_tagihan);
+            $this->db->where('status_bayar', 'Pending'); 
+            $cek_pending = $this->db->get('pembayaran')->row();
+
+            if ($cek_pending) {
+                // Jika user pernah klik bayar tapi batal, hapus data pending yang lama
+                $this->db->where('id_pembayaran', $cek_pending->id_pembayaran);
+                $this->db->delete('pembayaran');
+            }
+
+            // BUAT RECORD BARU agar selalu mendapat id_pembayaran yang fresh!
+            $data_bayar = array(
+                'id_tagihan'         => $id_tagihan,
+                'tanggal_pembayaran' => date('Y-m-d H:i:s'),
+                'total_bayar'        => $total_bayar,
+                'status_bayar'       => 'Pending', 
+                'bukti'              => 'MIDTRANS-OTOMATIS'
+            );
+            
+            $this->db->insert('pembayaran', $data_bayar);
+            $id_pembayaran = $this->db->insert_id(); // Ambil ID yang baru saja dibuat
+
+            // ====================================================================
+
             $transaction_details = array(
-                'order_id' => 'PLN-' . $id_tagihan . '-' . time(), // Order ID Unik
-                'gross_amount' => (int)$total_bayar, // Harus Integer
+                // Order ID menggunakan id_pembayaran asli yang dijamin selalu baru
+                'order_id'     => $id_pembayaran, 
+                'gross_amount' => (int)$total_bayar,
             );
 
             $customer_details = array(
@@ -78,17 +108,15 @@ class Tagihan extends CI_Controller {
     }
 
     // ==============================================================
-    // FINISH MIDTRANS (Update Database Otomatis)
+    // 2. FINISH MIDTRANS (Ketika User kembali dari pop-up Midtrans)
     // ==============================================================
     public function finish_midtrans()
     {
         $id_tagihan = $this->input->post('id_tagihan');
         
         if ($id_tagihan) {
-            // Panggil fungsi model baru untuk update LUNAS
             $this->tagihan->bayar_via_midtrans($id_tagihan);
-            
-            $this->session->set_flashdata('pesan_sukses', 'Pembayaran Berhasil! Tagihan Anda telah Lunas.');
+            $this->session->set_flashdata('pesan_sukses', 'Pembayaran sedang diproses / Berhasil! Tagihan Anda telah Lunas.');
         } else {
             $this->session->set_flashdata('pesan_gagal', 'Gagal memproses pembayaran.');
         }
@@ -96,7 +124,9 @@ class Tagihan extends CI_Controller {
         redirect('tagihan', 'refresh');
     }
 
-    // --- FUNGSI UPLOAD BUKTI MANUAL (Biarkan saja untuk opsi cadangan) ---
+    // ==============================================================
+    // 3. FUNGSI UPLOAD BUKTI MANUAL (Opsi Cadangan)
+    // ==============================================================
     public function upload_bukti()
     {
         $config['upload_path']   = './assets/bukti/';
@@ -110,7 +140,7 @@ class Tagihan extends CI_Controller {
             $this->session->set_flashdata('pesan_gagal', $this->upload->display_errors());
             redirect('tagihan','refresh');
         } else {
-            $update = $this->tagihan->update_bayar(); // Ini pakai fungsi lama
+            $update = $this->tagihan->update_bayar(); 
             if($update == TRUE){
                 $this->session->set_flashdata('pesan_sukses', 'Berhasil Mengupload Bukti Bayar');
             } else {

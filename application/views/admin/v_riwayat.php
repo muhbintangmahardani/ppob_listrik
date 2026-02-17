@@ -1,5 +1,5 @@
 <style>
-    /* --- NEXT.JS STYLE BASE (SAMA DENGAN SEBELUMNYA) --- */
+    /* --- NEXT.JS STYLE BASE --- */
     .page-title { font-weight: 700; color: #111827; margin-bottom: 24px; font-size: 24px; letter-spacing: -0.5px; }
     
     .nj-card {
@@ -33,6 +33,14 @@
     .nj-badge-success { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
     .nj-badge-danger { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
     .nj-badge-info { background: #eff6ff; color: #3b82f6; border: 1px solid #dbeafe; }
+
+    /* --- REALTIME BADGE --- */
+    .live-dot { 
+        height: 10px; width: 10px; background-color: #22c55e; border-radius: 50%; 
+        display: inline-block; margin-right: 6px; box-shadow: 0 0 0 2px #bbf7d0; 
+        animation: blinker 1.5s infinite; 
+    }
+    @keyframes blinker { 50% { opacity: 0; } }
 
     /* --- TABLE STYLING --- */
     .table-modern { width: 100% !important; border-collapse: separate !important; border-spacing: 0 !important; }
@@ -80,71 +88,21 @@
     .nj-input-group-addon.right { border-left: 1px solid #eaeaea; }
 </style>
 
-<h2 class="page-title"><?= $judul ?></h2>
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+    <h2 class="page-title" style="margin-bottom: 0;"><?= $judul ?></h2>
+    <div style="background: white; padding: 6px 14px; border-radius: 30px; border: 1px solid #eaeaea; font-size: 12px; font-weight: 600; color: #334155; display: flex; align-items: center;">
+        <span class="live-dot"></span> Live Realtime
+    </div>
+</div>
 
 <div class="row">
     <div class="col-md-12">
         <div class="nj-card">
-            <div class="table-responsive">
-                <table id="tabelbiasa" class="table table-modern">
-                    <thead>
-                        <tr>
-                            <th class="text-center" width="5%">No</th>
-                            <th>Tanggal</th>
-                            <th>Nama</th>
-                            <th>No. kWh</th>
-                            <th>Bulan Bayar</th>
-                            <th>Grand Total</th>
-                            <th class="text-center">Status</th>
-                            <th class="text-center">Metode</th>
-                            <th class="text-center" width="10%">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php $no=1; foreach ($DataRiwayat as $data) {  ?>
-                        <tr>
-                            <td class="text-center"><?= $no++ ?></td>
-                            <td style="color: #64748b;">
-                                <?= date('d/m/Y', strtotime($data->tanggal_pembayaran)) ?>
-                            </td>
-                            <td style="font-weight: 600; color: #111827;"><?= $data->nama_pelanggan ?></td>
-                            <td>
-                                <span style="font-family: monospace; background:#f1f5f9; padding:4px 8px; border-radius:6px; font-size:13px; color:#475569;">
-                                    <?= $data->nomor_kwh ?>
-                                </span>
-                            </td>
-                            <td style="color: #64748b;"><?= $data->bulan_bayar ?></td>
-                            <td style="font-weight: 600; color: #059669;">
-                                Rp <?= number_format($data->total_bayar, 2, ',', '.') ?>
-                            </td>
-                            
-                            <td class="text-center">
-                                <?php if($data->status == "Lunas"): ?>
-                                    <span class="nj-badge nj-badge-success">Lunas</span>
-                                <?php elseif($data->status == "Ditolak"): ?>
-                                    <span class="nj-badge nj-badge-danger">Ditolak</span>
-                                <?php else: ?>
-                                    <span class="nj-badge nj-badge-warning">Pending</span>
-                                <?php endif ?>
-                            </td>
-
-                            <td class="text-center">
-                                <?php if($data->bukti == 'MIDTRANS-OTOMATIS'): ?>
-                                    <span class="nj-badge nj-badge-info"><i class="fa fa-bolt"></i> Midtrans</span>
-                                <?php else: ?>
-                                    <span class="nj-badge" style="background:#f1f5f9; color:#64748b;"><i class="fa fa-file-image-o"></i> Manual</span>
-                                <?php endif; ?>
-                            </td>
-
-                            <td class="text-center">
-                                <a onclick="edit('<?=$data->id_pembayaran ?>')" class="nj-btn nj-btn-primary nj-btn-sm" data-toggle="modal" data-target="#detail" href="#">
-                                    <i class="fa fa-eye"></i> Detail
-                                </a>
-                            </td>
-                        </tr>
-                        <?php } ?>
-                    </tbody>
-                </table>
+            <div class="table-responsive" id="tabel-container">
+                <div class="text-center" style="padding: 50px; color: #94a3b8;">
+                    <i class="fa fa-circle-o-notch fa-spin fa-2x"></i>
+                    <p style="margin-top: 10px;">Sedang memuat data realtime...</p>
+                </div>
             </div>
         </div>
     </div>
@@ -193,8 +151,8 @@
                                 <p style="margin:4px 0 0 0; font-size:13px;">Terverifikasi oleh Payment Gateway (Midtrans)</p>
                             </div>
                         </div>
-
                     </div>
+
                     <div class="detail-item">
                         <label class="detail-label">Nama Pelanggan</label>
                         <input type="text" id="nama_pelanggan" disabled class="nj-input">
@@ -222,7 +180,7 @@
                     <div class="detail-item">
                         <label class="detail-label">Meter Awal</label>
                         <div class="nj-input-group">
-                            <input type="text" value="2000" id="meter_awal" disabled class="nj-input text-right">
+                            <input type="text" id="meter_awal" disabled class="nj-input text-right">
                             <span class="nj-input-group-addon right">kWh</span>
                         </div>
                     </div>
@@ -247,7 +205,7 @@
                         <label class="detail-label">Biaya Admin</label>
                         <div class="nj-input-group">
                             <span class="nj-input-group-addon left">Rp</span>
-                            <input type="text" value="2500" disabled class="nj-input text-right">
+                            <input type="text" value="2.500" disabled class="nj-input text-right">
                         </div>
                     </div>
 
@@ -269,6 +227,34 @@
 </div>
 
 <script type="text/javascript">
+    $(document).ready(function() {
+        // Panggil data pertama kali halaman diload
+        loadDataRealtime();
+        
+        // Refresh tabel setiap 4 detik tanpa reload browser
+        setInterval(function(){ 
+            loadDataRealtime(); 
+        }, 4000); 
+    });
+
+    // --- FUNGSI LOAD DATA TABEL REALTIME ---
+    function loadDataRealtime() {
+        $.ajax({
+            url: "<?= base_url('riwayat/get_tabel_realtime') ?>", 
+            type: "GET",
+            cache: false, 
+            data: { _: new Date().getTime() }, // Bypass cache
+            success: function(data) {
+                // Masukkan tabel (dari parsial) ke dalam id="tabel-container"
+                $("#tabel-container").empty().html(data);
+            },
+            error: function(xhr, status, error) {
+                console.log("AJAX Error: ", xhr.responseText);
+            }
+        });
+    }
+
+    // --- FUNGSI DETAIL MODAL ---
     function edit(a) {
         $.ajax({
             type: "post",
@@ -277,17 +263,14 @@
             success: function (data) {
                 // LOGIKA TAMPILAN BUKTI (Midtrans vs Manual)
                 if(data.bukti === 'MIDTRANS-OTOMATIS') {
-                    // Sembunyikan container gambar, munculkan info midtrans
                     $('#container-bukti-manual').hide();
                     $('#container-bukti-midtrans').show();
-                    // Admin pemverifikasi biasanya sistem jika midtrans
                     if(!data.nama_admin) {
                         $("#nama_admin").val("Otomatis By System");
                     } else {
                         $("#nama_admin").val(data.nama_admin);
                     }
                 } else {
-                    // Munculkan container gambar, sembunyikan info midtrans
                     $('#container-bukti-midtrans').hide();
                     $('#container-bukti-manual').show();
                     $("#bukti").attr('src','<?php echo base_url()?>assets/bukti/'+data.bukti);

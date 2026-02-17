@@ -3,63 +3,68 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
 class M_riwayat extends CI_Model {
 
-   public function getDataRiwayat()
-   {
-       $this->db->select('
-           pelanggan.nomor_kwh,
-           pelanggan.nama_pelanggan,
-           pembayaran.tanggal_pembayaran,
-           pembayaran.bulan_bayar,
-           pembayaran.biaya_admin,
-           pembayaran.total_bayar,
-           pembayaran.id_pembayaran,
-           pembayaran.status,
-           pembayaran.bukti,
-           admin.nama_admin'); // Jika Midtrans, ini nanti akan NULL (Kosong)
-       $this->db->from('pembayaran');
-       $this->db->where('pembayaran.status !=', '');
-       $this->db->order_by('id_pembayaran', 'desc');
-       
-       // --- PERBAIKAN DISINI ---
-       // Tambahkan parameter 'left' agar data pembayaran tetap muncul meski tidak ada adminnya
-       $this->db->join('admin','admin.id_admin=pembayaran.id_admin', 'left'); 
-       
-       // Join ke tabel data pelanggan tetap inner/biasa tidak masalah
-       $this->db->join('tagihan','tagihan.id_tagihan=pembayaran.id_tagihan');
-       $this->db->join('penggunaan','penggunaan.id_penggunaan=tagihan.id_penggunaan');
-       $this->db->join('pelanggan','pelanggan.id_pelanggan=penggunaan.id_pelanggan');
-       
-       return $this->db->get()->result();
-   }
+    public function getDataRiwayat()
+    {
+        // PERBAIKAN: Menambahkan CONCAT bulan dan tahun sebagai bulan_bayar
+        // Parameter FALSE ditambahkan agar CodeIgniter tidak error membaca fungsi CONCAT
+        $this->db->select("
+            p.id_pembayaran,
+            p.tanggal_pembayaran,
+            p.total_bayar,
+            p.status_bayar,
+            p.status,
+            p.bukti,
+            pl.nama_pelanggan,
+            pl.nomor_kwh,
+            CONCAT(t.bulan, ' ', t.tahun) AS bulan_bayar
+        ", FALSE); 
+        
+        $this->db->from('pembayaran p');
+        $this->db->join('tagihan t', 't.id_tagihan = p.id_tagihan', 'left');
+        $this->db->join('penggunaan pn', 'pn.id_penggunaan = t.id_penggunaan', 'left');
+        $this->db->join('pelanggan pl', 'pl.id_pelanggan = pn.id_pelanggan', 'left');
+        
+        // Urutkan dari yang terbaru
+        $this->db->order_by('p.id_pembayaran', 'DESC');
+        
+        return $this->db->get()->result();
+    }
 
-   public function getDetailRiwayat($id)
-   {
-     return $this->db
-              ->select('
-                 pelanggan.nomor_kwh,
-                 pelanggan.nama_pelanggan,
-                 penggunaan.meter_awal,
-                 penggunaan.meter_akhir,
-                 tagihan.jumlah_meter,
-                 pembayaran.bukti,
-                 pembayaran.tanggal_pembayaran,
-                 pembayaran.bulan_bayar,
-                 pembayaran.biaya_admin,
-                 pembayaran.total_bayar,
-                 pembayaran.id_pembayaran,
-                 pembayaran.status,
-                 pembayaran.bukti,
-                 admin.nama_admin')
-             ->where('pembayaran.id_pembayaran', $id)
-             ->order_by('id_pembayaran', 'desc')
-             
-             // --- PERBAIKAN DISINI JUGA ---
-             ->join('admin','admin.id_admin=pembayaran.id_admin', 'left')
-             
-             ->join('tagihan','tagihan.id_tagihan=pembayaran.id_tagihan')
-             ->join('penggunaan','penggunaan.id_penggunaan=tagihan.id_penggunaan')
-             ->join('pelanggan','pelanggan.id_pelanggan=penggunaan.id_pelanggan')
-             ->get('pembayaran')->row();
-   }
+    public function getDetailRiwayat($id)
+    {
+        // PERBAIKAN: Menambahkan CONCAT bulan dan tahun sebagai bulan_bayar
+        $this->db->select("
+            p.*,
+            pl.nama_pelanggan,
+            pl.nomor_kwh,
+            t.bulan,
+            t.tahun,
+            t.jumlah_meter,
+            pn.meter_awal,
+            pn.meter_akhir,
+            a.nama_admin,
+            CONCAT(t.bulan, ' ', t.tahun) AS bulan_bayar
+        ", FALSE);
+        
+        $this->db->from('pembayaran p');
+        $this->db->join('admin a', 'a.id_admin = p.id_admin', 'left');
+        $this->db->join('tagihan t', 't.id_tagihan = p.id_tagihan', 'left');
+        $this->db->join('penggunaan pn', 'pn.id_penggunaan = t.id_penggunaan', 'left');
+        $this->db->join('pelanggan pl', 'pl.id_pelanggan = pn.id_pelanggan', 'left');
+        
+        $this->db->where('p.id_pembayaran', $id);
+        
+        return $this->db->get()->row();
+    }
 
+    // --- FUNGSI UPDATE STATUS DARI WEBHOOK MIDTRANS ---
+    public function update_status($order_id, $status_baru)
+    {
+        // Sesuaikan nama kolom status. Saya asumsikan kolomnya bernama 'status'
+        $data = array('status' => $status_baru);
+        
+        // Mengubah data di tabel 'pembayaran' berdasarkan 'id_pembayaran' (Order ID)
+        $this->db->where('id_pembayaran', $order_id);
+        $this->db->update('pembayaran', $data);
+    }
 }
