@@ -12,7 +12,6 @@
     <link rel="stylesheet" href="<?=base_url()?>assets/vendor/linearicons/style.css">
     
     <link rel="stylesheet" href="<?=base_url()?>assets/bower_components/datatables.net-bs/css/dataTables.bootstrap.min.css">
-    
     <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.dataTables.min.css">
 
     <link rel="stylesheet" href="<?=base_url()?>assets/css/main.css">
@@ -46,7 +45,7 @@
         #navbar-menu { margin: 0; padding: 0; margin-right: 10px; }
         .navbar-nav { margin: 0 !important; display: flex; align-items: center; height: 70px; }
         .navbar-default .navbar-nav > li > a { font-weight: 600; color: #333 !important; display: flex !important; align-items: center; gap: 10px; padding: 0 15px !important; height: 70px; }
-        .navbar-default .navbar-nav > li > a img { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 2px solid #eaeaea; margin: 0 !important; }
+        .navbar-default .navbar-nav > li > a img { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 2px solid #eaeaea; margin: 0 !important; background-color: #f3f4f6; }
         .navbar-default .navbar-nav > li > a .icon-submenu { margin-left: 2px; font-size: 12px; color: #94a3b8; }
         .dropdown-menu { border-radius: 16px !important; border: 1px solid #eaeaea !important; box-shadow: 0 10px 30px rgba(0,0,0,0.1) !important; padding: 10px !important; margin-top: -5px !important; min-width: 200px; }
         .dropdown-menu > li > a { border-radius: 8px; padding: 8px 15px !important; transition: all 0.2s ease; }
@@ -93,14 +92,16 @@
             <div class="container-fluid">
                 <div class="nav-left-group">
                     <button type="button" class="btn-toggle-fullwidth"><i class="lnr lnr-menu"></i></button>
-                    <form class="navbar-form">
+                    
+                    <form class="navbar-form" action="<?= base_url('pencarian') ?>" method="GET">
                         <div class="input-group">
-                            <input type="text" class="form-control" placeholder="Cari data...">
+                            <input type="text" name="keyword" class="form-control" placeholder="Cari data pelanggan/tagihan..." required>
                             <span class="input-group-btn">
-                                <button type="button" class="btn btn-primary"><i class="fa fa-search"></i></button>
+                                <button type="submit" class="btn btn-primary"><i class="fa fa-search"></i></button>
                             </span>
                         </div>
                     </form>
+
                 </div>
                 <div id="navbar-menu">
                     <ul class="nav navbar-nav">
@@ -108,23 +109,38 @@
                             <a href="#" class="dropdown-toggle" data-toggle="dropdown">
                                 
                                 <?php 
-                                    // Cek apakah ada session foto profil dan filenya ada
-                                    $foto = $this->session->userdata('foto_profil');
-                                    if($foto && file_exists('./assets/img/profil/'.$foto)) {
-                                        $img_src = base_url('assets/img/profil/'.$foto);
+                                    if($this->session->userdata('id_level') != null) {
+                                        // ==========================================
+                                        // 1. JIKA ADMIN (Gunakan Inisial Nama)
+                                        // ==========================================
+                                        $nama_user = $this->session->userdata('nama_admin');
+                                        $nama_encoded = urlencode($nama_user);
+                                        $foto_profil = "https://ui-avatars.com/api/?name=".$nama_encoded."&background=0070f3&color=fff&rounded=true&bold=true";
+                                        
                                     } else {
-                                        $img_src = base_url('assets/img/user.png'); // Default
+                                        // ==========================================
+                                        // 2. JIKA PELANGGAN (Gunakan Foto Profil Asli)
+                                        // ==========================================
+                                        $nama_user = $this->session->userdata('nama_pelanggan');
+                                        
+                                        // Sesuaikan 'foto' dengan nama session foto yang Anda simpan saat login
+                                        $foto_session = $this->session->userdata('foto_profil'); 
+
+                                        if(!empty($foto_session)) {
+                                            // Jika user sudah upload foto, ambil dari folder assets
+                                            // Sesuaikan path 'assets/img/profil/' dengan folder upload Anda
+                                            $foto_profil = base_url('assets/img/profil/' . $foto_session); 
+                                        } else {
+                                            // Jika user belum upload foto, tampilkan inisial nama sebagai default
+                                            $nama_encoded = urlencode($nama_user);
+                                            $foto_profil = "https://ui-avatars.com/api/?name=".$nama_encoded."&background=0070f3&color=fff&rounded=true&bold=true";
+                                        }
                                     }
                                 ?>
-                                <img src="<?= $img_src ?>?v=<?= time() ?>" class="img-circle" alt="Avatar">
                                 
-                                <span>
-                                    <?php if($this->session->userdata('id_level')!= null): ?>
-                                        <?= $this->session->userdata('nama_admin') ?>
-                                    <?php else: ?>
-                                        <?= $this->session->userdata('nama_pelanggan') ?>
-                                    <?php endif ?>
-                                </span>
+                                <img src="<?= $foto_profil ?>" class="img-circle" alt="Avatar" style="object-fit: cover; width: 36px; height: 36px;">
+                                
+                                <span><?= htmlspecialchars($nama_user) ?></span>
                                 <i class="icon-submenu lnr lnr-chevron-down"></i>
                             </a>
                             <ul class="dropdown-menu">
@@ -179,7 +195,7 @@
             
             <footer style="padding: 24px 30px; margin-top: auto; border-top: 1px solid #eaeaea; background-color: transparent; text-align: left;">
                 <p style="margin: 0; color: #64748b; font-size: 13px; font-weight: 500;">
-                    &copy; 2026 Muh Bintang Mahardani. All rights reserved.
+                    &copy; <?= date('Y') ?> Muh Bintang Mahardani. All rights reserved.
                 </p>
             </footer>
 
@@ -204,12 +220,10 @@
 
     <script>
     $(document).ready(function () {
-        // Init tabel bawaan (jika view lain menggunakannya)
         if ($('#tabelbiasa').length) {
             $('#tabelbiasa').DataTable();
         }
 
-        // Script UI Navigasi Aktif
         var currentUrl = window.location.href;
         $('#sidebar-nav .nav li a').each(function() {
             if (currentUrl.includes($(this).attr('href'))) {

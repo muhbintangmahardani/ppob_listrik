@@ -14,7 +14,7 @@ class Notification extends CI_Controller {
     {
         // 1. Konfigurasi Midtrans (SAMA PERSIS dengan di Controller User)
         // GANTI SERVER KEY INI DENGAN MILIK ANDA
-        \Midtrans\Config::$serverKey = 'ISI_DENGAN_SERVER_KEY_MIDTRANS'; 
+        \Midtrans\Config::$serverKey = 'Mid-server-6ZfrsLJynO8fdWw3OHbWAJBI'; 
         \Midtrans\Config::$isProduction = false; // Sandbox
         \Midtrans\Config::$isSanitized = true;
         \Midtrans\Config::$is3ds = true;

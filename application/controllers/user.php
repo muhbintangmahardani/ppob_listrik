@@ -87,7 +87,7 @@ class User extends CI_Controller {
     {
         // 1. Konfigurasi Midtrans
         // GANTI 'SB-Mid-server-...' DENGAN SERVER KEY ANDA DARI DASHBOARD MIDTRANS
-        \Midtrans\Config::$serverKey = 'Mid-server-6ZfrsLJynO8fdWw3OHbWAJBI'; 
+        \Midtrans\Config::$serverKey = 'GANTI SERVER KEY INI DENGAN MILIK ANDA'; 
         \Midtrans\Config::$isProduction = false;
         \Midtrans\Config::$isSanitized = true;
         \Midtrans\Config::$is3ds = true;

@@ -5,6 +5,11 @@ class Tagihan extends CI_Controller {
 
     public function __construct() {
         parent::__construct();
+        
+        // --- TAMBAHKAN BARIS INI UNTUK SINKRONISASI WAKTU (WIB) ---
+        date_default_timezone_set('Asia/Jakarta'); 
+        // ----------------------------------------------------------
+
         // Cek login user
         if ($this->session->userdata('login') != TRUE) {
             $this->session->set_flashdata('pesan_gagal','Anda Harus Login Dahulu');
@@ -35,7 +40,7 @@ class Tagihan extends CI_Controller {
         require_once APPPATH . 'third_party/midtrans/Midtrans.php';
         
         // GANTI ServerKey DENGAN KEY ANDA
-        \Midtrans\Config::$serverKey = 'ISI_DENGAN_SERVER_KEY_MIDTRANS'; 
+        \Midtrans\Config::$serverKey = 'GANTI SERVER KEY INI DENGAN MILIK ANDA'; 
         \Midtrans\Config::$isProduction = false;
         \Midtrans\Config::$isSanitized = true;
         \Midtrans\Config::$is3ds = true;
@@ -148,5 +153,31 @@ class Tagihan extends CI_Controller {
             }
             redirect('tagihan','refresh');
         }
+    }
+
+// ==============================================================
+    // 4. CETAK INVOICE / STRUK PEMBAYARAN
+    // ==============================================================
+    public function cetak_invoice($id_tagihan)
+    {
+        // Ambil data detail tagihan dari model (menggunakan fungsi yang sama seperti di midtrans)
+        $data['detail'] = $this->tagihan->get_detail_tagihan($id_tagihan);
+
+        // Pastikan datanya ada
+        if (!$data['detail']) {
+            $this->session->set_flashdata('pesan_gagal', 'Data tagihan tidak ditemukan.');
+            redirect('tagihan', 'refresh');
+        }
+
+        // Ambil data pembayaran untuk menampilkan tanggal lunas dan total bayar
+        // Asumsi tabel bernama 'pembayaran' dan ada kolom status_bayar
+        $this->db->where('id_tagihan', $id_tagihan);
+        $this->db->where('status_bayar', 'Lunas'); // Ubah jika status lunas Anda berbeda
+        $data['pembayaran'] = $this->db->get('pembayaran')->row();
+
+        $data['judul'] = 'Struk Pembayaran Listrik';
+        
+        // Load view cetak secara terpisah (tanpa template dashboard agar bersih)
+        $this->load->view('user/v_cetak_invoice', $data);
     }
 }

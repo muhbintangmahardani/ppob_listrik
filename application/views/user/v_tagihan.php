@@ -27,6 +27,28 @@
     .nj-btn-secondary:hover { background: #f8fafc; color: #0f172a; border-color: #cbd5e1; }
     .nj-btn-sm { padding: 6px 12px; font-size: 13px; }
 
+    /* --- TAMBAHAN TOMBOL SELESAI & INVOICE --- */
+    .nj-btn-success-soft { 
+        background: #f0fdf4; 
+        color: #16a34a; 
+        border: 1px dashed #bbf7d0; 
+        cursor: default; 
+    }
+    .nj-btn-success-soft i {
+        color: #22c55e;
+    }
+    .nj-btn-invoice { 
+        background: #fff; 
+        color: #0ea5e9; 
+        border: 1px solid #bae6fd; 
+    }
+    .nj-btn-invoice:hover { 
+        background: #f0f9ff; 
+        color: #0284c7; 
+        border-color: #7dd3fc; 
+        transform: translateY(-1px); 
+    }
+
     /* --- BADGES (STATUS) --- */
     .nj-badge {
         padding: 4px 12px; border-radius: 9999px; font-size: 12px; font-weight: 600;
@@ -44,10 +66,7 @@
     .table-modern tbody td { padding: 16px; vertical-align: middle !important; border-bottom: 1px solid #f1f5f9; color: #334155; font-size: 14px; }
     .table-modern tbody tr:hover td { background-color: #f8fafc; }
 
-    /* --- MODAL & TOAST --- */
-    .modal-content { border-radius: 16px; border: none; box-shadow: 0 20px 40px rgba(0,0,0,0.1); overflow: hidden; }
-    .close { font-size: 24px; color: #64748b; opacity: 1; transition: color 0.2s; }
-    .close:hover { color: #0f172a; }
+    /* --- TOAST --- */
     .nj-toast-container { position: fixed; top: 85px; right: 32px; z-index: 9999; pointer-events: none; }
     .nj-toast {
         background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
@@ -66,7 +85,7 @@
     .nj-toast-close:hover { color: #111; }
 </style>
 
-<script src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="Mid-client-ZOLi0sda1Bpw1rXC"></script>
+<script src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="GANTI CLIENT KEY INI DENGAN MILIK ANDA"></script>
 
 <h2 class="page-title"><?= $judul ?></h2>
 
@@ -82,7 +101,7 @@
                             <th>Tahun</th>
                             <th>Jumlah Meter Penggunaan</th>
                             <th class="text-center">Status</th>
-                            <th class="text-center" width="20%">Action</th>
+                            <th class="text-center" width="25%">Action</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -113,17 +132,18 @@
                                 <div style="display: flex; gap: 8px; justify-content: center;">
                                     
                                     <?php if($data->status != "Lunas"): ?>
-                                        <button class="nj-btn nj-btn-primary nj-btn-sm" style="flex: 1; padding: 8px 4px; font-size: 12px;" onclick="bayarMidtrans('<?=$data->id_tagihan?>', this)">
+                                        <button class="nj-btn nj-btn-primary nj-btn-sm" style="flex: 1; padding: 8px 4px; font-size: 12px; width: 100%;" onclick="bayarMidtrans('<?=$data->id_tagihan?>', this)">
                                             <i class="fa fa-credit-card"></i> Bayar
                                         </button>
-
-                                        <a class="nj-btn nj-btn-danger nj-btn-sm" style="flex: 1; padding: 8px 4px; font-size: 12px;" data-toggle="modal" data-target="#hapus" href="#" onclick="edit('<?=$data->id_tagihan?>')">
-                                            <i class="fa fa-trash"></i> Hapus
-                                        </a>
+                                        
                                     <?php else: ?>
-                                        <button class="nj-btn nj-btn-secondary nj-btn-sm" style="flex: 1; padding: 8px 4px; font-size: 12px; cursor: default;" disabled>
-                                            <i class="fa fa-check-circle"></i> Selesai
-                                        </button>
+                                        <div class="nj-btn-success-soft" style="flex: 1; display: inline-flex; align-items: center; justify-content: center; padding: 8px 4px; font-size: 12px; border-radius: 8px;">
+                                            <i class="fa fa-check-circle" style="margin-right: 4px; font-size: 14px;"></i> Lunas
+                                        </div>
+
+                                        <a href="<?= base_url('tagihan/cetak_invoice/'.$data->id_tagihan) ?>" target="_blank" class="nj-btn nj-btn-invoice nj-btn-sm" style="flex: 1; padding: 8px 4px; font-size: 12px;">
+                                            <i class="fa fa-print"></i> Struk
+                                        </a>
                                     <?php endif; ?>
 
                                 </div>
@@ -133,39 +153,6 @@
                     </tbody>
                 </table>
             </div>
-        </div>
-    </div>
-</div>
-
-<div class="modal fade" id="hapus" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog modal-sm" role="document">
-        <div class="modal-content">
-            <div class="modal-header" style="background: #fef2f2; border-bottom: 1px solid #fecaca; padding: 20px 24px;">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="margin-top: -4px;">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-                <h4 style="color: #dc2626; margin: 0; font-weight: 700; font-size: 18px;">Hapus Data</h4>
-            </div>
-            <form action="<?=base_url('penggunaan/hapus_tagihan')?>" method="post">
-                <div class="modal-body text-center" style="padding: 24px;">
-                    <i class="fa fa-exclamation-triangle" style="font-size: 40px; color: #ef4444; margin-bottom: 16px; display: block;"></i>
-                    <h5 style="color: #111827; font-weight: 600;">Anda Yakin Ingin Menghapus Tagihan?</h5>
-                    <p style="color: #64748b; font-size: 13px; margin: 0;">Tindakan ini tidak dapat dibatalkan.</p>
-                    
-                    <input type="hidden" id="id_penggunaan" name="id_penggunaan" required="required">
-                    <input type="hidden" id="id_tagihan" name="id_tagihan" required="required">
-                    
-                    <input type="hidden" id="id_pelanggan">
-                    <input type="hidden" id="bulan">
-                    <input type="hidden" id="tahun">
-                    <input type="hidden" id="jumlah_meter">
-                    <input type="hidden" id="status">
-                </div>
-                <div class="modal-footer" style="display: flex; gap: 8px; border-top: 1px solid #eaeaea; padding: 16px 24px; background: #fafafa;">
-                    <button type="button" class="nj-btn nj-btn-secondary" style="flex: 1;" data-dismiss="modal">Batal</button>
-                    <button type="submit" class="nj-btn nj-btn-danger" style="flex: 1;">Ya, Hapus</button>
-                </div>
-            </form>
         </div>
     </div>
 </div>
@@ -206,25 +193,7 @@
 
 <script type="text/javascript">
     
-    // 1. Fungsi Edit (Bawaan Lama)
-    function edit(a) {
-        $.ajax({
-            type: "post",
-            url: "<?=base_url()?>penggunaan/data_tagihan/" + a,
-            dataType: "json",
-            success: function (data) {
-                $("#id_tagihan").val(data.id_tagihan);
-                $("#id_penggunaan").val(data.id_penggunaan);
-                $("#id_pelanggan").val(data.id_pelanggan);
-                $("#bulan").val(data.bulan);
-                $("#tahun").val(data.tahun);
-                $("#jumlah_meter").val(data.jumlah_meter);
-                $("#status").val(data.status);
-            }
-        });
-    }
-
-    // 2. Fungsi Bayar Midtrans (Logic Update Status Otomatis)
+    // Fungsi Bayar Midtrans (Logic Update Status Otomatis)
     function bayarMidtrans(id_tagihan, btn) {
         
         // Ubah text tombol jadi loading
