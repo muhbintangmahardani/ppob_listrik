@@ -2,6 +2,11 @@
 defined('BASEPATH') OR exit('No direct script access allowed');
 
 class pembayaran extends CI_Controller {
+public function notification() {
+    // --- TAMBAHKAN 2 BARIS INI UNTUK TES ---
+    http_response_code(200);
+    exit('OK');
+}
 
   public function __construct() {
        parent::__construct();
