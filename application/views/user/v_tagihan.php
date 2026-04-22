@@ -85,7 +85,7 @@
     .nj-toast-close:hover { color: #111; }
 </style>
 
-<script src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="GANTI CLIENT KEY INI DENGAN MILIK ANDA"></script>
+<script src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="Mid-client-ZOLi0sda1Bpw1rXC" ></script>
 
 <h2 class="page-title"><?= $judul ?></h2>
 
