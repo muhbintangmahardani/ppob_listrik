@@ -367,15 +367,24 @@ $config['encryption_key'] = '';
 | except for 'cookie_prefix' and 'cookie_httponly', which are ignored here.
 |
 */
+// --- PENGATURAN SESSION UNTUK VERCEL ---
+// Karena Vercel tidak bisa simpan file, kita simpan session di folder sementara (/tmp)
+// atau lebih direkomendasikan ubah ke 'database' jika kamu sudah punya tabel ci_sessions.
 $config['sess_driver'] = 'files';
 $config['sess_cookie_name'] = 'ci_session';
 $config['sess_expiration'] = 7200;
-$config['sess_save_path'] = NULL;
+$config['sess_save_path'] = '/tmp'; // WAJIB /tmp UNTUK VERCEL (Jangan NULL)
 $config['sess_match_ip'] = FALSE;
 $config['sess_time_to_update'] = 300;
 $config['sess_regenerate_destroy'] = FALSE;
-$config['csrf_exclude_uris'] = array('riwayat/midtrans_notif');
 
+// --- PENGATURAN MIDTRANS CSRF ---
+// Pastikan INI SAMA PERSIS dengan yang ada di Dashboard Midtrans
+$config['csrf_exclude_uris'] = array(
+    'pembayaran/notification',  // Masukkan URL yang dipakai Midtrans
+    'pembayaran/notification/', // Masukkan versi dengan garis miring (untuk jaga-jaga Vercel redirect)
+    'riwayat/midtrans_notif'    // Jika ini masih kamu pakai, biarkan saja
+);
 /*
 |--------------------------------------------------------------------------
 | Cookie Related Variables
