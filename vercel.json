@@ -12,7 +12,7 @@
     },
     {
       "src": "/(.*)",
-      "dest": "/index.php/$1"
+      "dest": "/index.php?/$1"
     }
   ]
 }
